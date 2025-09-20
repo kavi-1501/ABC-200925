@@ -1,0 +1,58 @@
+---
+- name: Install Git and Terraform, Clone Repo, Execute TF, and Cleanup
+  hosts: all
+  become: yes
+  vars:
+    repo_url: "https://github.com/kavi-1501/ABC-200925.git"
+    repo_dest: "/home/azureuser/terraform-practice"
+
+  tasks:
+    # 1. Update packages
+    - name: Update apt package index
+      apt:
+        update_cache: yes
+
+    # 2. Install Git
+    - name: Install Git
+      apt:
+        name: git
+        state: present
+
+    # 3. Install Terraform prerequisites
+    - name: Install Terraform prerequisites
+      apt:
+        name:
+          - gnupg
+          - software-properties-common
+          - curl
+        state: present
+
+    # 4. Add HashiCorp GPG key
+    - name: Add HashiCorp GPG key
+      shell: |
+        curl -fsSL https://apt.releases.hashicorp.com/gpg | gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+      args:
+        creates: /usr/share/keyrings/hashicorp-archive-keyring.gpg
+
+    # 5. Add HashiCorp APT repo
+    - name: Add HashiCorp APT repository
+      apt_repository:
+        repo: "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+        state: present
+
+    # 6. Install Terraform
+    - name: Install Terraform
+      apt:
+        name: terraform
+        state: present
+        update_cache: yes
+
+    # 7. Clone Git repository
+    - name: Clone Terraform repo
+      git:
+        repo: "{{ repo_url }}"
+        dest: "{{ repo_dest }}"
+        version: main
+
+    # 8. Initialize Terraform
+
